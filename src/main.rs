@@ -11,6 +11,10 @@ fn index_post(_req: &HttpRequest) -> &'static str {
     "Hola peticion post"
 }
 
+fn handler_404(_req: &HttpRequest) -> &'static str {
+    "No existe lo que buscas"
+}
+
 fn main() {
     server::new(move || {
         App::new()
@@ -21,6 +25,7 @@ fn main() {
 
             .resource("/get", |r| r.method(Method::GET).f(index_get))
             .resource("/post", |r| r.method(Method::POST).f(index_post))
+            .default_resource(|r| r.f(handler_404))
     })
     .bind("127.0.0.1:8000")
     .unwrap()
