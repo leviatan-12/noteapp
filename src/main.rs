@@ -14,13 +14,11 @@ fn index_post(_req: &HttpRequest) -> &'static str {
 fn main() {
     server::new(move || {
         App::new()
-            .resource("/",|r| r.f(|req| {
-                match *req.method() {
-                    Method::GET => index_get(req),
-                    Method::POST => index_post(req),
-                    _ => "No encontrado"
-                }
-            }))
+            .resource("/",|r|  {
+                    r.method(Method::GET).f(index_get);
+                    r.method(Method::POST).f(index_post);
+            })
+
             .resource("/get", |r| r.method(Method::GET).f(index_get))
             .resource("/post", |r| r.method(Method::POST).f(index_post))
     })
