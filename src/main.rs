@@ -18,6 +18,16 @@ struct HelloRequest {
     age: u32
 }
 
+#[derive(Deserialize)]
+struct BigPath {
+    name: String,
+    partner: String,
+    friend: String,
+    pet: String,
+    age: u32,
+    boolean: bool,
+}
+
 fn index_get(_req: &HttpRequest) -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("static/index.html")?)
 }
@@ -53,11 +63,16 @@ fn infinite_parameters_url(req: &HttpRequest) -> Result<Json<HelloResponse>>{
     ))
 }
 
-fn easy_parameters_reciver(path: Path<(String,u32)>) -> Result<Json<HelloResponse>> {
+fn easy_parameters_reciver(path: Path<BigPath>) -> Result<Json<HelloResponse>> {
+    let id: u32 = if path.boolean {
+        path.age * 2
+    } else {
+        path.age
+    };
     Ok(Json (
         HelloResponse {
-            greetings: format!("Hola {}",path.0),
-            id: path.1*32,
+            greetings: format!("Hi {} with partner {} and friends {}, {}",path.name,path.partner,path.friend,path.pet),
+            id: id,
         }
     ))
 }
@@ -75,7 +90,7 @@ fn main() {
             })
             .resource(r"/greetings/{name}/{age}", |r| r.method(Method::POST).f(greetings_url))
             .resource(r"/infinite/{list:.*}", |r| r.method(Method::POST).f(infinite_parameters_url))
-            .resource(r"/path/{name}/{age}", |r| r.method(Method::POST).with(easy_parameters_reciver))
+            .resource(r"/path/{name}/{partner}/{friend}/{pet}/{boolean}/{age}", |r| r.method(Method::POST).with(easy_parameters_reciver))
             .resource("/get", |r| r.method(Method::GET).f(index_get))
             .resource("/post", |r| r.method(Method::POST).with(index_post))
             .default_resource(|r| r.f(handler_404))
