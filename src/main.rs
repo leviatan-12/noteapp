@@ -3,8 +3,13 @@ extern crate actix_web;
 #[macro_use]
 extern crate serde_derive;
 
+#[macro_use]
+extern crate failure;
+
 use actix_web::{App, server, HttpRequest, http::{Method, StatusCode}, fs, Result, Json, Path};
 use std::path::PathBuf;
+
+mod error;
 
 #[derive(Serialize)]
 struct HelloResponse {
@@ -93,6 +98,7 @@ fn main() {
             .resource(r"/path/{name}/{partner}/{friend}/{pet}/{boolean}/{age}", |r| r.method(Method::POST).with(easy_parameters_reciver))
             .resource("/get", |r| r.method(Method::GET).f(index_get))
             .resource("/post", |r| r.method(Method::POST).with(index_post))
+            .resource("/error", |r| r.method(Method::POST).f(error::func_with_error))
             .default_resource(|r| r.f(handler_404))
     })
     .bind("127.0.0.1:8000")
