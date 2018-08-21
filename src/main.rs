@@ -6,7 +6,16 @@ extern crate serde_derive;
 #[macro_use]
 extern crate failure;
 
-use actix_web::{App, server, HttpRequest, http::{Method, StatusCode}, fs, Result, Json, Path};
+use actix_web::{
+    App, 
+    server, 
+    HttpRequest, 
+    http::{Method, StatusCode}, 
+    fs, 
+    Result, 
+    Json, 
+    middleware::cors::Cors,
+    Path};
 use std::path::PathBuf;
 
 mod error;
@@ -89,18 +98,25 @@ fn handler_404(_req: &HttpRequest) -> Result<fs::NamedFile> {
 fn main() {
     server::new(move || {
         App::new()
+            .prefix("api")
+            .configure( | app | {
+                Cors::for_app(app)
+                    .allowed_origin("http://localhost:3000")
+                      .max_age(3600)
             .resource("/",|r|  {
                     r.method(Method::GET).f(index_get);
                     r.method(Method::POST).with(index_post);
             })
-            .resource(r"/greetings/{name}/{age}", |r| r.method(Method::POST).f(greetings_url))
-            .resource(r"/infinite/{list:.*}", |r| r.method(Method::POST).f(infinite_parameters_url))
-            .resource(r"/path/{name}/{partner}/{friend}/{pet}/{boolean}/{age}", |r| r.method(Method::POST).with(easy_parameters_reciver))
-            .resource("/get", |r| r.method(Method::GET).f(index_get))
-            .resource("/post", |r| r.method(Method::POST).with(index_post))
-            .resource("/error", |r| r.method(Method::POST).f(error::func_with_error))
+                .resource(r"/greetings/{name}/{age}", |r| r.method(Method::POST).f(greetings_url))
+                .resource(r"/infinite/{list:.*}", |r| r.method(Method::POST).f(infinite_parameters_url))
+                .resource(r"/path/{name}/{partner}/{friend}/{pet}/{boolean}/{age}", |r| r.method(Method::POST).with(easy_parameters_reciver))
+                .resource("/get", |r| r.method(Method::GET).f(index_get))
+                .resource("/post", |r| r.method(Method::POST).with(index_post))
+                .resource("/error", |r| r.method(Method::POST).f(error::func_with_error))
+                .register()
+            })
             .default_resource(|r| r.f(handler_404))
-    })
+   })
     .bind("127.0.0.1:8000")
     .unwrap()
     .run()
